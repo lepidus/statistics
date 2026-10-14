@@ -300,7 +300,7 @@ class StatisticsHandler extends Handler {
 	 */
 	
 	private function dataForMonth(&$cols, $entries) {
-		if($entries == null) return;
+		$cols = array();
 		$currTotal = 0;
 		for ($i = 1; $i <= 12; $i++) {
 			$currTotal = 0;
@@ -315,7 +315,7 @@ class StatisticsHandler extends Handler {
 	}
 	
 	private function dataForWeek(&$cols, $entries) {
-		if($entries == null) return;
+		$cols = array();
 		foreach($entries as $entry) {
 			$currTotal = 0;
 			$currTotal += $entry['sum_metric'];
@@ -324,7 +324,7 @@ class StatisticsHandler extends Handler {
 	}
 
 	private function day(&$cols, $entries) {
-		if($entries == null) return;
+		$cols = array();
 		foreach($entries as $entry) {
 			$currTotal = substr($entry['day'],-2,2) . "/" . substr($entry['day'],-4,2) . "/" . substr($entry['day'],0,4) ;
 			$cols[]=$currTotal;
@@ -332,7 +332,7 @@ class StatisticsHandler extends Handler {
 	}
 	
 	private function dataForYear(&$cols, $entries, $year) {
-		if($entries == null) return;
+		$cols = array();
 		$currTotal = 0;
 		for ($i = $year-5; $i <= $year; $i++) {
 			$currTotal = 0;
