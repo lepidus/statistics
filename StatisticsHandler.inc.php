@@ -80,7 +80,7 @@ class StatisticsHandler extends Handler {
 		$obj[1]->day = array_reverse($days);
 		unset($cols);
 
-		echo json_encode($obj);
+		$this->sendJson($obj);
 	}
 	
 	
@@ -94,8 +94,8 @@ class StatisticsHandler extends Handler {
 		$request = \Application::get()->getRequest();
 		$journal =& $request->getJournal();
 
-		$year = $request->getUserVar('year');
-		if (empty($year)) $year = date('Y');
+		$year = $this->getRequestedYear($request);
+		if ($year === null) return $this->rejectInvalidRequest();
 		
 		//statistics report
 		$statisticsChartsDAO =& DAORegistry::getDAO('StatisticsChartsDAO');
@@ -116,7 +116,7 @@ class StatisticsHandler extends Handler {
 		$obj[1]->values = $cols;
 		unset($cols);
 
-		echo json_encode($obj);
+		$this->sendJson($obj);
 	}
 	
 	
@@ -126,8 +126,8 @@ class StatisticsHandler extends Handler {
 	function getStatisticsByYear() {
 		$request = \Application::get()->getRequest();
 		$journal =& $request->getJournal();
-		$year = $request->getUserVar('year');
-		if (empty($year)) $year = date('Y');
+		$year = $this->getRequestedYear($request);
+		if ($year === null) return $this->rejectInvalidRequest();
 		
 		$statisticsChartsDAO =& DAORegistry::getDAO('StatisticsChartsDAO');
 			
@@ -147,7 +147,7 @@ class StatisticsHandler extends Handler {
 		$obj[1]->values = $cols;
 		unset($cols);
 		
-		echo json_encode($obj);
+		$this->sendJson($obj);
 	}
 	
 	/**
@@ -156,8 +156,8 @@ class StatisticsHandler extends Handler {
 	function getStatisticsByCountryAbstract() {
 		$request = \Application::get()->getRequest();
 		$journal =& $request->getJournal();
-		$year = $request->getUserVar('year');
-		if (empty($year)) $year = date('Y');
+		$year = $this->getRequestedYear($request);
+		if ($year === null) return $this->rejectInvalidRequest();
 		
 		$statisticsChartsDAO =& DAORegistry::getDAO('StatisticsChartsDAO');
 		$result = $statisticsChartsDAO->getMetricsByCountryType($journal->getId(), ASSOC_TYPE_SUBMISSION, $year);
@@ -174,7 +174,7 @@ class StatisticsHandler extends Handler {
 			}
 		}
 		
-		echo json_encode($obj);
+		$this->sendJson($obj);
 	}
 	
 	/**
@@ -183,8 +183,8 @@ class StatisticsHandler extends Handler {
 	function getStatisticsByCountryDownload() {
 		$request = \Application::get()->getRequest();
 		$journal =& $request->getJournal();
-		$year = $request->getUserVar('year');
-		if (empty($year)) $year = date('Y');
+		$year = $this->getRequestedYear($request);
+		if ($year === null) return $this->rejectInvalidRequest();
 		
 		$statisticsChartsDAO =& DAORegistry::getDAO('StatisticsChartsDAO');
 		$result = $statisticsChartsDAO->getMetricsByCountryType($journal->getId(), ASSOC_TYPE_SUBMISSION_FILE, $year);
@@ -199,7 +199,7 @@ class StatisticsHandler extends Handler {
 			}
 		}
 		
-		echo json_encode($obj);
+		$this->sendJson($obj);
 	}
 	
 	/**
@@ -210,10 +210,11 @@ class StatisticsHandler extends Handler {
 		$journal =& $request->getJournal();
 		$primaryLocale = $journal->getPrimaryLocale();
 
-		$year = $request->getUserVar('year');
-		if (empty($year)) $year = date('Y');
+		$year = $this->getRequestedYear($request);
+		if ($year === null) return $this->rejectInvalidRequest();
 		
-		$type = $request->getUserVar('type');
+		$type = (int) $request->getUserVar('type');
+		if (!in_array($type, array(ASSOC_TYPE_SUBMISSION, ASSOC_TYPE_SUBMISSION_FILE), true)) return $this->rejectInvalidRequest();
 		
 		$statisticsChartsDAO =& DAORegistry::getDAO('StatisticsChartsDAO');
 		$result = $statisticsChartsDAO->getMetricsMostPopularByType($journal->getId(), $type, $year, $primaryLocale);
@@ -228,7 +229,7 @@ class StatisticsHandler extends Handler {
 			}
 		}
 		
-		echo json_encode($obj);
+		$this->sendJson($obj);
 	}
 	
 	/**
@@ -239,8 +240,8 @@ class StatisticsHandler extends Handler {
 		$journal =& $request->getJournal();
 		$primaryLocale = $journal->getPrimaryLocale();
 
-		$year = $request->getUserVar('year');
-		if (empty($year)) $year = date('Y');
+		$year = $this->getRequestedYear($request);
+		if ($year === null) return $this->rejectInvalidRequest();
 		
 		//statistics report
 		$statisticsChartsDAO =& DAORegistry::getDAO('StatisticsChartsDAO');
@@ -258,7 +259,7 @@ class StatisticsHandler extends Handler {
 			}
 		}
 		
-		echo json_encode($obj);
+		$this->sendJson($obj);
 	}
 	
 	/**
@@ -274,6 +275,24 @@ class StatisticsHandler extends Handler {
 	}
 
 	
+	private function getRequestedYear($request) {
+		$year = $request->getUserVar('year');
+		if ($year === null || $year === '') return date('Y');
+		if (!is_string($year) || !preg_match('/^[1-9][0-9]{3}$/', $year)) return null;
+		return $year;
+	}
+
+	private function rejectInvalidRequest() {
+		http_response_code(400);
+		$this->sendJson(array());
+	}
+
+	private function sendJson($data) {
+		header('Content-Type: application/json; charset=utf-8');
+		header('X-Content-Type-Options: nosniff');
+		echo json_encode($data);
+	}
+
 	/**
 	 * ************************************************************
 	 * 					PARSER DATA FUNCTIONS
