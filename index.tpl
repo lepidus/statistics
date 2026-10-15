@@ -140,6 +140,11 @@
 	
 	$(document).ready(function() {
 		
+		Highcharts.setOptions({
+			global: {
+				canvasToolsURL: '{/literal}{$baseUrl|escape:"javascript"}{literal}/plugins/generic/statistics/js/highcharts/modules/canvas-tools.js'
+			}
+		});
 		
 		/***********************************************************
 		 *        			FUNCTIONS UPDATE DATA
